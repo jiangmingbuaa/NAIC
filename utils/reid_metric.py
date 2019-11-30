@@ -112,7 +112,7 @@ class R1_mAP_reranking(Metric):
         # max_value=(0,0,0)
         # import pdb
         # pdb.set_trace()
-        model_name = './ensemble_b/distmat_resnext101_ibn_a_60'
+        model_name = './ensemble_b/distmat_resnet50_ibn_a_80' # change with different models (e.g. resnext101_ibn_a, densenet169_ibn_a)
         np.save(model_name,distmat)
         np.save('./ensemble_b/g_pids.npy',g_pids)
         np.save('./ensemble_b/q_pids.npy',q_pids)

@@ -160,7 +160,7 @@ class Baseline(nn.Module):
             # self.classifier.apply(weights_init_classifier)  # new add by luo
         elif self.neck == 'bnneck':
             self.bottleneck = nn.BatchNorm1d(self.in_planes)
-            # self.bottleneck = nn.BatchNorm1d(1664)
+            # self.bottleneck = nn.BatchNorm1d(1664)  # densenet169
             self.bottleneck.bias.requires_grad_(False)  # no shift
             self.bottleneck.apply(weights_init_kaiming)
 
