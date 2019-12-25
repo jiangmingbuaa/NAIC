@@ -9,7 +9,6 @@ from torch import nn
 import torch.nn.functional as F
 from torch import nn, autograd
 
-
 def normalize(x, axis=-1):
     """Normalizing to unit length along the specified dimension.
     Args:
@@ -151,18 +150,18 @@ class CrossEntropyLabelSmooth(nn.Module):
         loss = (- targets * log_probs).mean(0).sum()
         return loss
 
-'''
+
 class OIM(autograd.Function):
     def __init__(self, lut, momentum=0.5):
         super(OIM, self).__init__()
         self.lut = lut
         self.momentum = momentum
-
+    
     def forward(self, inputs, targets):
         self.save_for_backward(inputs, targets)
         outputs = inputs.mm(self.lut.t())
         return outputs
-
+    
     def backward(self, grad_outputs):
         inputs, targets = self.saved_tensors
         grad_inputs = None
@@ -171,8 +170,7 @@ class OIM(autograd.Function):
         for x, y in zip(inputs, targets):
             self.lut[y] = self.momentum * self.lut[y] + (1. - self.momentum) * x
             self.lut[y] /= self.lut[y].norm()
-        return grad_inputs, None
-
+        return grad_inputs.float(), None
 
 def oim(inputs, targets, lut, momentum=0.5):
     return OIM(lut, momentum=momentum)(inputs, targets)
@@ -195,7 +193,7 @@ class OIMLoss(nn.Module):
 
         self.register_buffer('lut', torch.zeros(num_classes, feat_dim))
         self.lut = self.lut.cuda()
-
+        
     def forward(self, inputs, targets, normalize_feature=True, margin=0.0): 
         if normalize_feature:
             inputs = normalize(inputs, axis=-1)
@@ -315,9 +313,11 @@ class OIMLoss(nn.Module):
             # import pdb
             # pdb.set_trace()
             # weight = torch.cat([torch.ones(self.num_classes), torch.zeros(self.queue_size)])
-            weight = torch.cat([torch.ones(4768), torch.zeros(self.num_classes+self.queue_size-4768)])
+            # weight = torch.cat([torch.ones(4768), torch.zeros(self.num_classes+self.queue_size-4768)])
+            weight = torch.cat([torch.ones(9968), torch.zeros(self.num_classes+self.queue_size-9968)])
             weight = weight.cuda()
             loss = F.cross_entropy(inputs, targets, weight=weight, reduction=self.reduction, ignore_index=-1)
         #self.index = (self.index + torch.nonzero(targets<0) % self.queue_size
         self.index = (self.index + torch.nonzero(targets>=self.num_classes).size(0)) % self.queue_size
         return loss, inputs
+'''

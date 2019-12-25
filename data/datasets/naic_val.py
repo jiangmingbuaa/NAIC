@@ -15,16 +15,16 @@ class NAIC_val(BaseImageDataset):
 
     dataset_dir = 'NAIC_val'
 
-    def __init__(self, root='/home1/lizihan/reID/data/', verbose=True, **kwargs):
+    def __init__(self, root='/root/share/dataset/reid/', verbose=True, **kwargs):
         super(NAIC_val, self).__init__()
-        self.dataset_dir = osp.join(root, 'NAIC')
-        self.train_dir = osp.join(self.dataset_dir, 'train_set')
+        self.dataset_dir = osp.join(root, 'NAIC2')
+        self.train_dir = osp.join(self.dataset_dir, 'train')
         self.query_dir = osp.join(self.dataset_dir, 'query_a')
         self.gallery_dir = osp.join(self.dataset_dir, 'gallery_a')
 
         self._check_before_run()
 
-        file_dir = '/home/jiangming/re-id/NAIC/reid_strong_baseline/data/datasets/'
+        file_dir = '/root/share/dataset/reid/NAIC2/'
         train_file = osp.join(file_dir, 'train_val_list.txt')
         query_file = osp.join(file_dir, 'query_a_val_list.txt')
         gallery_file = osp.join(file_dir, 'gallery_a_val_list.txt')

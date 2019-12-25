@@ -46,6 +46,11 @@ def create_supervised_evaluator(model, metrics,
             data = data.to(device) if torch.cuda.device_count() >= 1 else data
             feat = model(data)
 
+            # indexes = [[0,2,1], [1,0,2], [1,2,0], [2,1,0], [2,0,1]]
+            # for idx in indexes:
+            #     img_filp = data.index_select(1, torch.tensor(idx).long().cuda())
+            #     feat_new = model(img_filp)
+            #     feat + feat_new
             data = _fliplr(data)
             feat_flip = model(data)
             feat = feat + feat_flip

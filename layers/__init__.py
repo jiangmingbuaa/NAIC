@@ -23,11 +23,11 @@ def make_loss(cfg, num_classes):    # modified by gu
     elif cfg.MODEL.METRIC_LOSS_TYPE == 'triplet_oim':
         triplet = TripletLoss(cfg.SOLVER.MARGIN)  # triplet loss
         if cfg.MODEL.IF_LABELSMOOTH == 'on':
-            oim = OIMLoss(feat_dim=feat_dim, num_classes=num_classes, scalar=20.0, momentum=0.5,
+            oim = OIMLoss(feat_dim=feat_dim, num_classes=num_classes, scalar=30.0, momentum=0.5,
                  label_smooth=True, epsilon=0.1, weight=None)  # oim loss
             print("oim loss, label smooth on, numclasses:", num_classes)
         else:
-            oim = OIMLoss(feat_dim=feat_dim, num_classes=num_classes, scalar=20.0, momentum=0.5,
+            oim = OIMLoss(feat_dim=feat_dim, num_classes=num_classes, scalar=30.0, momentum=0.5,
                  label_smooth=False, weight=None)  # oim loss
             print("oim loss, label smooth off, numclasses:", num_classes)
     else:
@@ -77,7 +77,7 @@ def make_loss_with_center(cfg, num_classes):    # modified by gu
         center_criterion = CenterLoss(num_classes=num_classes, feat_dim=feat_dim, use_gpu=True)  # center loss
 
     elif cfg.MODEL.METRIC_LOSS_TYPE == 'triplet_center_oim':
-        oim = OIMLoss(feat_dim=feat_dim, num_classes=num_classes, scalar=20.0, momentum=0.5,
+        oim = OIMLoss(feat_dim=feat_dim, num_classes=num_classes, scalar=30.0, momentum=0.5,
                  weight=None)  # oim loss
         triplet = TripletLoss(cfg.SOLVER.MARGIN)  # triplet loss
         center_criterion = CenterLoss(num_classes=num_classes, feat_dim=feat_dim, use_gpu=True) # center loss

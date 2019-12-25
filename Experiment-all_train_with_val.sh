@@ -30,9 +30,9 @@
 
 
 # triplet loss + softmax / oim
-python3 tools/train.py --config_file='configs/softmax_triplet.yml' MODEL.DEVICE_ID "('0,1')" MODEL.NAME "('resnet50')" DATASETS.NAMES "('NAIC_val')" \
-MODEL.PRETRAIN_PATH "('/home/jiangming/.torch/models/resnet50-19c8e357.pth')" \
-OUTPUT_DIR "('/home/jiangming/re-id/NAIC/reid_strong_baseline/output/Experiment-resnet50-all-tricks-val')" \
+python3 tools/train.py --config_file='configs/softmax_triplet.yml' MODEL.DEVICE_ID "('5,6')" MODEL.NAME "('resnet50_ibn_a')" DATASETS.NAMES "('NAIC_val')" \
+MODEL.PRETRAIN_PATH "('/root/share/pretrained_models/r50_ibn_a.pth')" \
+OUTPUT_DIR "('/root/data/reid/NAIC/output/Experiment-resnet50_ibn_a_val')" \
 MODEL.METRIC_LOSS_TYPE "('triplet_oim')"  MODEL.IF_LABELSMOOTH "('off')"
 #MODEL.METRIC_LOSS_TYPE "('triplet_oim')"  MODEL.IF_LABELSMOOTH "('off')"  ### oim loss 
 #MODEL.METRIC_LOSS_TYPE "('triplet_center')"  MODEL.IF_LABELSMOOTH "('on')"

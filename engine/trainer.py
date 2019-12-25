@@ -8,16 +8,18 @@ import logging
 
 import torch
 import torch.nn as nn
+
 from ignite.engine import Engine, Events
 from ignite.handlers import ModelCheckpoint, Timer
 from ignite.metrics import RunningAverage
 
 from utils.reid_metric import R1_mAP
 
+
 global ITER
 ITER = 0
 
-def create_supervised_trainer(model, optimizer, loss_fn, device=None):
+def create_supervised_trainer(model, optimizer, loss_fn, device=None, fp16=True): 
     """
     Factory function for creating a trainer for supervised models
 
@@ -31,10 +33,19 @@ def create_supervised_trainer(model, optimizer, loss_fn, device=None):
     Returns:
         Engine: a trainer engine with supervised update function
     """
+
     if device:
         if torch.cuda.device_count() > 1:
             model = nn.DataParallel(model)
         model.to(device)
+
+    if fp16:
+        print('Using fp16!')
+        import apex
+        from apex import amp
+        model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
+        # model = apex.parallel.convert_syncbn_model(model)
+        # model = apex.parallel.DistributedDataParallel(model)
 
     def _update(engine, batch):
         model.train()
@@ -54,8 +65,13 @@ def create_supervised_trainer(model, optimizer, loss_fn, device=None):
             loss = loss_fn(score, feat, target)
             # compute acc
             acc = (score.max(1)[1] == target).float().mean()
-
-        loss.backward()
+    
+        if fp16:
+            with amp.scale_loss(loss, optimizer) as scaled_loss:
+                scaled_loss.backward()
+        else:
+            loss.backward()
+        
         optimizer.step()
         return loss.item(), acc.item()
 

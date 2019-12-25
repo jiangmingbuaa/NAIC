@@ -21,8 +21,8 @@
 
 
 # triplet loss + softmax loss / oim loss
-python3 tools/test.py --config_file='configs/softmax_triplet.yml' MODEL.DEVICE_ID "('1')" MODEL.NAME "('resnet50')" DATASETS.NAMES "('NAIC_val')"  \
-OUTPUT_DIR "('/home/jiangming/re-id/NAIC/reid_strong_baseline/output/')" \
-DATASETS.ROOT_DIR "('/home1/lizihan/reID/data')" MODEL.PRETRAIN_CHOICE "('self')" \
-TEST.WEIGHT "('/home/jiangming/re-id/NAIC/reid_strong_baseline/output/Experiment-resnet50-all-tricks-val/resnet50_model_60.pth')" \
+python3 tools/test.py --config_file='configs/softmax_triplet.yml' MODEL.DEVICE_ID "('6')" MODEL.NAME "('resnet50_ibn_a')" DATASETS.NAMES "('NAIC_val')"  \
+OUTPUT_DIR "('/root/data/reid/NAIC/output/')" \
+DATASETS.ROOT_DIR "('/root/share/dataset/reid')" MODEL.PRETRAIN_CHOICE "('self')" \
+TEST.WEIGHT "('/root/data/reid/NAIC/output/Experiment-resnet50_ibn_a_val_2/resnet50_ibn_a_model_80.pth')" \
 # TEST.RE_RANKING "('yes')" # re-ranking

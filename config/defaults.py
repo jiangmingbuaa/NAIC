@@ -77,7 +77,7 @@ _C.DATASETS = CN()
 # List of the dataset names for training, as present in paths_catalog.py
 _C.DATASETS.NAMES = ('market1501')
 # Root directory where datasets should be used (and downloaded if not found)
-_C.DATASETS.ROOT_DIR = ('/home1/lizihan/reID/data')
+_C.DATASETS.ROOT_DIR = ('/root/share/dataset/reid')
 
 # -----------------------------------------------------------------------------
 # DataLoader

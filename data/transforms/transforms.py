@@ -36,6 +36,20 @@ class RandomErasing(object):
                 return img
         return img
 '''
+import numpy as np
+class RandomShuffle(object):
+    def __init__(self, probability=0.5):
+        self.probability = probability
+
+    def __call__(self, img):
+        if random.uniform(0, 1) >= self.probability:
+            return img
+        
+        index = np.arange(3)
+        np.random.shuffle(index)
+        img = img[index, :, :]
+        return img
+
 class RandomErasing(object):
     """ Randomly selects a rectangle region in an image and erases its pixels.
         'Random Erasing Data Augmentation' by Zhong et al.
@@ -58,7 +72,7 @@ class RandomErasing(object):
         self.r1 = r1
 
     def __call__(self, img):
-
+        
         if random.uniform(0, 1) >= self.probability:
             return img
 
