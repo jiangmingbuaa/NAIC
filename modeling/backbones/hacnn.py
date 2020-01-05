@@ -243,8 +243,8 @@ class ResNet_IBN_HA(nn.Module):
 
         ########## ha
         self.ha1 = HarmAttn(512, self.learn_region)
-        self.ha2 = HarmAttn(1024, self.learn_region)
-        self.ha3 = HarmAttn(2048, self.learn_region)
+        # self.ha2 = HarmAttn(1024, self.learn_region)
+        # self.ha3 = HarmAttn(2048, self.learn_region)
         if self.learn_region:
             self.init_scale_factors()
             self.local_conv1 = InceptionB(256, 512)
@@ -330,8 +330,8 @@ class ResNet_IBN_HA(nn.Module):
                 x1_local_list.append(x1_local_i)
 
         x2 = self.layer3(x1_out)
-        x2_attn, x2_theta = self.ha2(x2)
-        x2_out = x2*x2_attn
+        # x2_attn, x2_theta = self.ha2(x2)
+        # x2_out = x2*x2_attn
         if self.learn_region:
             x2_local_list = []
             for region_idx in range(4):
@@ -343,9 +343,10 @@ class ResNet_IBN_HA(nn.Module):
                 x2_local_i = self.local_conv2(x2_local_i)
                 x2_local_list.append(x2_local_i)
 
-        x3 = self.layer4(x2_out)
-        x3_attn, x3_theta = self.ha3(x3)
-        x3_out = x3*x3_attn
+        # x3 = self.layer4(x2_out)
+        x3 = self.layer4(x2)
+        # x3_attn, x3_theta = self.ha3(x3)
+        # x3_out = x3*x3_attn
         if self.learn_region:
             x3_local_list = []
             for region_idx in range(4):
@@ -375,7 +376,8 @@ class ResNet_IBN_HA(nn.Module):
             x_local = self.fc_local(x_local)
             return x3_out, x_local
         else:
-            return x3_out
+            # return x3_out
+            return x3
         # x = self.avgpool(x)
         # x = x.view(x.size(0), -1)
         # x = self.fc(x)

@@ -34,19 +34,24 @@ def train(cfg):
         optimizer = make_optimizer(cfg, model)
         # scheduler = WarmupMultiStepLR(optimizer, cfg.SOLVER.STEPS, cfg.SOLVER.GAMMA, cfg.SOLVER.WARMUP_FACTOR,
         #                               cfg.SOLVER.WARMUP_ITERS, cfg.SOLVER.WARMUP_METHOD)
-
+        
         loss_func = make_loss(cfg, num_classes)     # modified by gu
 
         # Add for using self trained model
         if cfg.MODEL.PRETRAIN_CHOICE == 'self':
-            start_epoch = eval(cfg.MODEL.PRETRAIN_PATH.split('/')[-1].split('.')[0].split('_')[-1])
-            print('Start epoch:', start_epoch)
-            path_to_optimizer = cfg.MODEL.PRETRAIN_PATH.replace('model', 'optimizer')
-            print('Path to the checkpoint of optimizer:', path_to_optimizer)
-            model.load_state_dict(torch.load(cfg.MODEL.PRETRAIN_PATH))
-            optimizer.load_state_dict(torch.load(path_to_optimizer))
+            # start_epoch = eval(cfg.MODEL.PRETRAIN_PATH.split('/')[-1].split('.')[0].split('_')[-1])
+            # print('Start epoch:', start_epoch)
+            # path_to_optimizer = cfg.MODEL.PRETRAIN_PATH.replace('model', 'optimizer')
+            # print('Path to the checkpoint of optimizer:', path_to_optimizer)
+            # model.load_state_dict(torch.load(cfg.MODEL.PRETRAIN_PATH))
+            # optimizer.load_state_dict(torch.load(path_to_optimizer))
+            # scheduler = WarmupMultiStepLR(optimizer, cfg.SOLVER.STEPS, cfg.SOLVER.GAMMA, cfg.SOLVER.WARMUP_FACTOR,
+                                        #   cfg.SOLVER.WARMUP_ITERS, cfg.SOLVER.WARMUP_METHOD, start_epoch)
+            start_epoch = 0
             scheduler = WarmupMultiStepLR(optimizer, cfg.SOLVER.STEPS, cfg.SOLVER.GAMMA, cfg.SOLVER.WARMUP_FACTOR,
-                                          cfg.SOLVER.WARMUP_ITERS, cfg.SOLVER.WARMUP_METHOD, start_epoch)
+                                          cfg.SOLVER.WARMUP_ITERS, cfg.SOLVER.WARMUP_METHOD)
+            model.load_state_dict(torch.load(cfg.MODEL.PRETRAIN_PATH).state_dict())
+        
         elif cfg.MODEL.PRETRAIN_CHOICE == 'imagenet':
             start_epoch = 0
             scheduler = WarmupMultiStepLR(optimizer, cfg.SOLVER.STEPS, cfg.SOLVER.GAMMA, cfg.SOLVER.WARMUP_FACTOR,
@@ -125,10 +130,13 @@ def main():
     )
     parser.add_argument("opts", help="Modify config options using the command-line", default=None,
                         nargs=argparse.REMAINDER)
+    parser.add_argument("--local_rank", default=-1, type=int) # 12.25
 
     args = parser.parse_args()
 
     num_gpus = int(os.environ["WORLD_SIZE"]) if "WORLD_SIZE" in os.environ else 1
+
+    cfg.local_rank = args.local_rank # 12.25
 
     if args.config_file != "":
         cfg.merge_from_file(args.config_file)

@@ -19,7 +19,7 @@ from utils.reid_metric import R1_mAP
 global ITER
 ITER = 0
 
-def create_supervised_trainer(model, optimizer, loss_fn, device=None, fp16=True): 
+def create_supervised_trainer(model, optimizer, loss_fn, device=None, fp16=True, local_rank=-1): 
     """
     Factory function for creating a trainer for supervised models
 
@@ -33,10 +33,7 @@ def create_supervised_trainer(model, optimizer, loss_fn, device=None, fp16=True)
     Returns:
         Engine: a trainer engine with supervised update function
     """
-
     if device:
-        if torch.cuda.device_count() > 1:
-            model = nn.DataParallel(model)
         model.to(device)
 
     if fp16:
@@ -44,8 +41,17 @@ def create_supervised_trainer(model, optimizer, loss_fn, device=None, fp16=True)
         import apex
         from apex import amp
         model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
-        # model = apex.parallel.convert_syncbn_model(model)
-        # model = apex.parallel.DistributedDataParallel(model)
+        # if local_rank>=0:
+        #     torch.cuda.set_device(local_rank)
+        #     torch.distributed.init_process_group(backend='nccl', init_method='env://')
+        #     model.to(device)
+        #     model = apex.parallel.convert_syncbn_model(model)
+        #     model = apex.parallel.DistributedDataParallel(model)
+
+    if torch.cuda.device_count() > 1 and local_rank<0:
+        model = nn.DataParallel(model)
+
+    
 
     def _update(engine, batch):
         model.train()
@@ -58,8 +64,13 @@ def create_supervised_trainer(model, optimizer, loss_fn, device=None, fp16=True)
         use_oim = True
         # import pdb
         # pdb.set_trace()
+        # engine.state.epoch
         if use_oim:
-            loss, oim_outputs = loss_fn(score, feat, target)
+            # print(engine.state.epoch)
+            loss, oim_outputs = loss_fn(score, feat, target, epoch=engine.state.epoch)
+            # loss, oim_outputs = loss_fn(score, feat, target)
+            # index_train = torch.nonzero(target<6987).view(-1)
+            # target = target[index_train]
             acc = (oim_outputs.max(1)[1] == target).float().mean()
         else:
             loss = loss_fn(score, feat, target)
@@ -182,7 +193,7 @@ def do_train(
 
     logger = logging.getLogger("reid_baseline.train")
     logger.info("Start training")
-    trainer = create_supervised_trainer(model, optimizer, loss_fn, device=device)
+    trainer = create_supervised_trainer(model, optimizer, loss_fn, device=device, local_rank=cfg.local_rank)
     evaluator = create_supervised_evaluator(model, metrics={'r1_mAP': R1_mAP(num_query, max_rank=50, feat_norm=cfg.TEST.FEAT_NORM)}, device=device)
     checkpointer = ModelCheckpoint(output_dir, cfg.MODEL.NAME, checkpoint_period, n_saved=10, require_empty=False)
     timer = Timer(average=True)

@@ -117,13 +117,14 @@ class _DenseBlock(nn.Sequential):
 
 
 class _Transition(nn.Sequential):
-    def __init__(self, num_input_features, num_output_features):
+    def __init__(self, num_input_features, num_output_features, down_sample=True):
         super(_Transition, self).__init__()
         self.add_module('norm', nn.BatchNorm2d(num_input_features))
         self.add_module('relu', nn.ReLU(inplace=True))
         self.add_module('conv', nn.Conv2d(num_input_features, num_output_features,
                                           kernel_size=1, stride=1, bias=False))
-        self.add_module('pool', nn.AvgPool2d(kernel_size=2, stride=2))
+        if down_sample:
+            self.add_module('pool', nn.AvgPool2d(kernel_size=2, stride=2))
 
 
 class DenseNet(nn.Module):
@@ -162,7 +163,8 @@ class DenseNet(nn.Module):
             self.features.add_module('denseblock%d' % (i + 1), block)
             num_features = num_features + num_layers * growth_rate
             if i != len(block_config) - 1:
-                trans = _Transition(num_input_features=num_features, num_output_features=num_features // 2)
+                down_sample = not (i==len(block_config)-2)
+                trans = _Transition(num_input_features=num_features, num_output_features=num_features // 2, down_sample=down_sample)
                 self.features.add_module('transition%d' % (i + 1), trans)
                 num_features = num_features // 2
 
@@ -203,6 +205,7 @@ class DenseNet(nn.Module):
     
     def forward(self, x):
         features = self.features(x)
+        # print(x.size(), features.size())
         # out = F.relu(features, inplace=True)
         # out = F.avg_pool2d(out, kernel_size=7, stride=1).view(features.size(0), -1)
         # out = self.classifier(out)

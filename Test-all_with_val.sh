@@ -21,8 +21,14 @@
 
 
 # triplet loss + softmax loss / oim loss
-python3 tools/test.py --config_file='configs/softmax_triplet.yml' MODEL.DEVICE_ID "('6')" MODEL.NAME "('resnet50_ibn_a')" DATASETS.NAMES "('NAIC_val')"  \
+python3 tools/test.py --config_file='configs/softmax_triplet.yml' MODEL.DEVICE_ID "('0')" MODEL.NAME "('resnet50_ibn_a')" DATASETS.NAMES "('NAIC_val')"  \
 OUTPUT_DIR "('/root/data/reid/NAIC/output/')" \
 DATASETS.ROOT_DIR "('/root/share/dataset/reid')" MODEL.PRETRAIN_CHOICE "('self')" \
-TEST.WEIGHT "('/root/data/reid/NAIC/output/Experiment-resnet50_ibn_a_val_2/resnet50_ibn_a_model_80.pth')" \
+TEST.WEIGHT "('/root/data/reid/NAIC/output/Experiment-resnet50_ibn_a_val_3/resnet50_ibn_a_model_20.pth')" \
 # TEST.RE_RANKING "('yes')" # re-ranking
+
+# python3 tools/test.py --config_file='configs/softmax_triplet.yml' MODEL.DEVICE_ID "('7')" MODEL.NAME "('densenet121_ibn_a')" DATASETS.NAMES "('NAIC_val')"  \
+# OUTPUT_DIR "('/root/data/reid/NAIC/output/')" \
+# DATASETS.ROOT_DIR "('/root/share/dataset/reid')" MODEL.PRETRAIN_CHOICE "('self')" \
+# TEST.WEIGHT "('/root/data/reid/NAIC/output/Experiment-resnet50_ibn_a_val_4/densenet121_ibn_a_model_80.pth')" \
+#TEST.RE_RANKING "('yes')" # re-ranking

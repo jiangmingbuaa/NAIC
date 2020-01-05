@@ -15,20 +15,23 @@ class NAIC(BaseImageDataset):
 
     dataset_dir = 'NAIC'
 
-    def __init__(self, root='/root/share/dataset/reid/', verbose=True, **kwargs):
+    def __init__(self, root='/root/share/dataset/reid/', verbose=True, gallery_dir='gallery_B', query_dir='query_B', **kwargs):
         super(NAIC, self).__init__()
         # self.dataset_dir = osp.join(root, self.dataset_dir)
-        self.dataset_dir = osp.join(root, 'NAIC2')
+        # self.dataset_dir = osp.join(root, 'NAIC2')
+        self.dataset_dir = root # /tmp/data
         self.train_dir = osp.join(self.dataset_dir, 'train') # train dir
         # self.query_dir = osp.join(self.dataset_dir, 'query_b') # query dir
         # self.gallery_dir = osp.join(self.dataset_dir, 'gallery_b') # gallery dir
-        self.query_dir = osp.join(self.dataset_dir, 'query_a')
-        self.gallery_dir = osp.join(self.dataset_dir, 'gallery_a')
+        self.query_dir = osp.join(self.dataset_dir, 'test', query_dir)
+        self.gallery_dir = osp.join(self.dataset_dir, 'test', gallery_dir)
 
         self._check_before_run()
 
-        train = self._process_dir(self.train_dir, 'train_list.txt', relabel=True) # train file list
-        query = self._process_dir(self.query_dir, 'query_a_list.txt', relabel=False) # query file list
+        # train = self._process_dir(self.train_dir, 'train_all_list.txt', relabel=True) # train file list
+        train = self._process_dir(self.train_dir, 'label/train_list.txt', relabel=True)
+        # query = self._process_dir(self.query_dir, 'query_b_list.txt', relabel=False) # query file list
+        query = self._process_dir(self.query_dir, '', relabel=False)
         gallery = self._process_dir(self.gallery_dir, '', relabel=False)
 
         if verbose:
@@ -66,14 +69,17 @@ class NAIC(BaseImageDataset):
             label = []
             pid_container = set()
             for name_label in label_list:
-                if 'query' in name_label:
-                    img_paths.append(osp.join(self.dataset_dir,name_label.split(' ')[0]))
-                else:
-                    img_paths.append(osp.join(dir_path ,name_label.split(' ')[0].split('/')[1]))
+                img_paths.append(osp.join(self.dataset_dir,name_label.split(' ')[0]))  ### to do
+                # if 'query' in name_label or 'gallery' in name_label:
+                #     img_paths.append(osp.join(self.dataset_dir,name_label.split(' ')[0]))
+                # else:
+                #     img_paths.append(osp.join(dir_path ,name_label.split(' ')[0].split('/')[1]))
                 # img_paths.append(osp.join(dir_path ,name_label.split(' ')[0].split('/')[1]))
                 label.append(int(name_label.split(' ')[1]))
                 pid_container.add(int(name_label.split(' ')[1]))
             pid2label = {pid: label for label, pid in enumerate(pid_container)}
+            # import pdb
+            # pdb.set_trace()
             for i in range(len(img_paths)):
                 pid = label[i]
                 if relabel: pid = pid2label[pid]

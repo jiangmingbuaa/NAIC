@@ -15,20 +15,22 @@ def make_loss(cfg, num_classes):    # modified by gu
         feat_dim = 512
     if cfg.MODEL.NAME == 'densenet169_ibn_a':
         feat_dim = 1664
+    elif cfg.MODEL.NAME == 'densenet121_ibn_a':
+        feat_dim = 1024
     else:
         feat_dim = 2048
     sampler = cfg.DATALOADER.SAMPLER
     if cfg.MODEL.METRIC_LOSS_TYPE == 'triplet':
         triplet = TripletLoss(cfg.SOLVER.MARGIN)  # triplet loss
-    elif cfg.MODEL.METRIC_LOSS_TYPE == 'triplet_oim':
+    elif cfg.MODEL.METRIC_LOSS_TYPE == 'triplet_oim' or cfg.MODEL.METRIC_LOSS_TYPE == 'oim':
         triplet = TripletLoss(cfg.SOLVER.MARGIN)  # triplet loss
         if cfg.MODEL.IF_LABELSMOOTH == 'on':
-            oim = OIMLoss(feat_dim=feat_dim, num_classes=num_classes, scalar=30.0, momentum=0.5,
-                 label_smooth=True, epsilon=0.1, weight=None)  # oim loss
+            oim = OIMLoss(feat_dim=feat_dim, num_classes=num_classes, scalar=30.0, momentum=0.4,
+                 label_smooth=True, epsilon=0.1, margin=cfg.SOLVER.OIM_MARGIN, weight=None)  # oim loss
             print("oim loss, label smooth on, numclasses:", num_classes)
         else:
-            oim = OIMLoss(feat_dim=feat_dim, num_classes=num_classes, scalar=30.0, momentum=0.5,
-                 label_smooth=False, weight=None)  # oim loss
+            oim = OIMLoss(feat_dim=feat_dim, num_classes=num_classes, scalar=30.0, momentum=0.4,
+                 label_smooth=False, margin=cfg.SOLVER.OIM_MARGIN, weight=None)  # oim loss
             print("oim loss, label smooth off, numclasses:", num_classes)
     else:
         print('expected METRIC_LOSS_TYPE should be triplet'
@@ -45,7 +47,7 @@ def make_loss(cfg, num_classes):    # modified by gu
         def loss_func(score, feat, target):
             return triplet(feat, target)[0]
     elif cfg.DATALOADER.SAMPLER == 'softmax_triplet':
-        def loss_func(score, feat, target):
+        def loss_func(score, feat, target, epoch=80):
             if cfg.MODEL.METRIC_LOSS_TYPE == 'triplet':
                 if cfg.MODEL.IF_LABELSMOOTH == 'on':
                     return xent(score, target) + triplet(feat, target)[0]
@@ -54,6 +56,8 @@ def make_loss(cfg, num_classes):    # modified by gu
             elif cfg.MODEL.METRIC_LOSS_TYPE == 'triplet_oim':
                 oim_loss, oim_outputs = oim(score, target)
                 return oim_loss + triplet(feat, target)[0], oim_outputs
+            elif cfg.MODEL.METRIC_LOSS_TYPE == 'oim':
+                return oim(score, target, epoch=epoch)
             else:
                 print('expected METRIC_LOSS_TYPE should be triplet'
                       'but got {}'.format(cfg.MODEL.METRIC_LOSS_TYPE))

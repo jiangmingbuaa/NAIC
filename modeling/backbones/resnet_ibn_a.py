@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import math
 import torch.utils.model_zoo as model_zoo
-
+import collections
 
 __all__ = ['ResNet_IBN', 'resnet50_ibn_a', 'resnet101_ibn_a',
            'resnet152_ibn_a']
@@ -14,6 +14,47 @@ model_urls = {
     'resnet152': 'https://download.pytorch.org/models/resnet152-b121ed2d.pth',
 }
 
+class ADL(nn.Module):
+    def __init__(self, drop_rate=0.75, drop_thr=0.8):
+        super(ADL, self).__init__()
+        assert 0 <= drop_rate <= 1 and 0 <= drop_thr <= 1
+        self.drop_rate = drop_rate
+        self.drop_thr = drop_thr
+        self.attention = None
+        self.drop_mask = None
+
+    def extra_repr(self):
+        return 'drop_rate={}, drop_thr={}'.format(
+            self.drop_rate, self.drop_thr
+        )
+
+    def forward(self, x):
+        if self.training:
+            b = x.size(0)
+
+            # Generate self-attention map
+            attention = torch.mean(x, dim=1, keepdim=True)
+            self.attention = attention
+            # Generate importance map
+            # importance_map = torch.sigmoid(attention)
+
+            # Generate drop mask
+            max_val, _ = torch.max(attention.view(b, -1), dim=1, keepdim=True)
+            thr_val = max_val * self.drop_thr
+            thr_val = thr_val.view(b, 1, 1, 1).expand_as(attention)
+            drop_mask = (attention < thr_val).float()
+            self.drop_mask = drop_mask
+            # Random selection
+            # random_tensor = torch.rand([], dtype=torch.float32) + self.drop_rate
+            # binary_tensor = random_tensor.floor()
+            # selected_map = (1. - binary_tensor) * importance_map + binary_tensor * drop_mask
+            selected_map = drop_mask
+            # Spatial multiplication to input feature map
+            output = x.mul(selected_map)
+
+        else:
+            output = x
+        return output
 
 class IBN(nn.Module):
     def __init__(self, planes):
@@ -92,6 +133,8 @@ class ResNet_IBN(nn.Module):
         self.avgpool = nn.AvgPool2d(7)
         self.fc = nn.Linear(scale * 8 * block.expansion, num_classes)
 
+        # self.adl1 = ADL(drop_rate=0.75, drop_thr=0.9)
+
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
@@ -128,11 +171,15 @@ class ResNet_IBN(nn.Module):
         x = self.bn1(x)
         x = self.relu(x)
         x = self.maxpool(x)
+
+        # x = self.adl1(x)
         
         x = self.layer1(x)
         x = self.layer2(x)
         x = self.layer3(x)
         x = self.layer4(x)
+
+        # x = self.adl1(x)
 
         # x = self.avgpool(x)
         # x = x.view(x.size(0), -1)
@@ -141,6 +188,8 @@ class ResNet_IBN(nn.Module):
         return x
 
     def load_param(self, model_path):
+        # import pdb
+        # pdb.set_trace()
         param_dict = torch.load(model_path)
         for i in param_dict:
             if 'fc' in i:

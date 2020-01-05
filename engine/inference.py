@@ -72,12 +72,12 @@ def inference(
         num_query
 ):
     device = cfg.MODEL.DEVICE
-
+    # test_model = cfg.TEST.WEIGHT.split('/')[-1].split('.')[0]
     logger = logging.getLogger("reid_baseline.inference")
     logger.info("Enter inferencing")
     if cfg.TEST.RE_RANKING == 'no':
         print("Create evaluator")
-        evaluator = create_supervised_evaluator(model, metrics={'r1_mAP': R1_mAP(num_query, max_rank=50, feat_norm=cfg.TEST.FEAT_NORM)},
+        evaluator = create_supervised_evaluator(model, metrics={'r1_mAP': R1_mAP(num_query, max_rank=50, feat_norm=cfg.TEST.FEAT_NORM, test_model=cfg.TEST.TEST_MODEL)},
                                                 device=device)
     elif cfg.TEST.RE_RANKING == 'yes':
         print("Create evaluator for reranking")

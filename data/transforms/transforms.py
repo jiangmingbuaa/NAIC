@@ -37,6 +37,92 @@ class RandomErasing(object):
         return img
 '''
 import numpy as np
+import cv2
+from PIL import Image
+
+class HisEqulColor(object):
+    def __init__(self, probability=0.5):
+        self.probability = probability
+    
+    def __call__(self, img):
+        # print(type(img))
+        if random.uniform(0, 1) >= self.probability:
+            return img
+        
+        img = cv2.cvtColor(np.asarray(img),cv2.COLOR_RGB2BGR)
+        ycrcb = cv2.cvtColor(img, cv2.COLOR_BGR2YCR_CB)
+        channels = cv2.split(ycrcb)
+        cv2.equalizeHist(channels[0],channels[0])
+        cv2.merge(channels,ycrcb)
+        cv2.cvtColor(ycrcb, cv2.COLOR_YCR_CB2BGR, img)
+        img = Image.fromarray(cv2.cvtColor(img,cv2.COLOR_BGR2RGB))
+        return img
+
+# class HisEqulColor(object):
+
+#     def histeq(self, imarr):
+#         hist, bins = np.histogram(imarr, 255)
+#         cdf = np.cumsum(hist)
+#         cdf = 255 * (cdf/cdf[-1])
+#         res = np.interp(imarr.flatten(), bins[:-1], cdf)
+#         res = res.reshape(imarr.shape)
+#         return res, hist
+    
+#     def __call__(self, img):
+#         imarr = np.array(img)
+#         r_arr = imarr[...,0]
+#         g_arr = imarr[...,1]
+#         b_arr = imarr[...,2]
+        
+#         r_res, _ = self.histeq(r_arr)
+#         g_res, _ = self.histeq(g_arr)
+#         b_res, _ = self.histeq(b_arr)
+        
+#         new_imarr = np.zeros(imarr.shape, dtype='uint8')
+#         new_imarr[...,0] = r_res
+#         new_imarr[...,1] = g_res
+#         new_imarr[...,2] = b_res
+        
+#         return Image.fromarray(new_imarr, mode='RGB')
+
+# class HisEqulColor(object):
+
+#     def __init__(self, probability=0.5):
+#         self.probability = probability
+
+#     def histeq(self, imarr):
+#         hist, bins = np.histogram(imarr, 255)
+#         cdf = np.cumsum(hist)
+#         cdf = 255 * (cdf/cdf[-1])
+#         res = np.interp(imarr.flatten(), bins[:-1], cdf)
+#         res = res.reshape(imarr.shape)
+#         return res, hist
+    
+#     def __call__(self, img):
+#         if random.uniform(0, 1) >= self.probability:
+#             return img
+
+#         imarr = np.array(img)
+#         r_arr = imarr[...,0]
+#         g_arr = imarr[...,1]
+#         b_arr = imarr[...,2]
+        
+#         imarr2 = np.average(imarr, axis=2)
+#         hist, bins = np.histogram(imarr2, 255)
+#         cdf = np.cumsum(hist)
+#         cdf = 255 * (cdf/cdf[-1])
+        
+#         r_res = np.interp(r_arr, bins[:-1], cdf)
+#         g_res = np.interp(g_arr, bins[:-1], cdf)
+#         b_res = np.interp(b_arr, bins[:-1], cdf)
+        
+#         new_imarr = np.zeros(imarr.shape, dtype="uint8")
+#         new_imarr[...,0] = r_res
+#         new_imarr[...,1] = g_res
+#         new_imarr[...,2] = b_res
+        
+#         return Image.fromarray(new_imarr, mode='RGB')
+
 class RandomShuffle(object):
     def __init__(self, probability=0.5):
         self.probability = probability
@@ -49,6 +135,8 @@ class RandomShuffle(object):
         np.random.shuffle(index)
         img = img[index, :, :]
         return img
+
+
 
 class RandomErasing(object):
     """ Randomly selects a rectangle region in an image and erases its pixels.

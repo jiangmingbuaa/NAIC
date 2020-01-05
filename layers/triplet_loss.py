@@ -98,6 +98,7 @@ class TripletLoss(object):
     Loss for Person Re-Identification'."""
 
     def __init__(self, margin=None):
+        # margin=None
         self.margin = margin
         #print(margin)
         if margin is not None:
@@ -170,6 +171,7 @@ class OIM(autograd.Function):
         for x, y in zip(inputs, targets):
             self.lut[y] = self.momentum * self.lut[y] + (1. - self.momentum) * x
             self.lut[y] /= self.lut[y].norm()
+        # return grad_inputs, None
         return grad_inputs.float(), None
 
 def oim(inputs, targets, lut, momentum=0.5):
@@ -178,11 +180,13 @@ def oim(inputs, targets, lut, momentum=0.5):
 
 class OIMLoss(nn.Module):
     def __init__(self, feat_dim, num_classes, scalar=1.0, momentum=0.5, label_smooth=False,
-                 epsilon=0.1, weight=None, reduction='mean'):
+                 epsilon=0.1, margin=0.1, weight=None, reduction='mean'):
         super(OIMLoss, self).__init__()
         self.feat_dim = feat_dim
         self.num_classes = num_classes
+        self.margin = margin
         self.momentum = momentum
+        print('oim momentum:',self.momentum)
         self.scalar = scalar
         self.weight = weight
         self.reduction = reduction
@@ -194,15 +198,20 @@ class OIMLoss(nn.Module):
         self.register_buffer('lut', torch.zeros(num_classes, feat_dim))
         self.lut = self.lut.cuda()
         
-    def forward(self, inputs, targets, normalize_feature=True, margin=0.0): 
+    def forward(self, inputs, targets, normalize_feature=True, epoch=80): 
         if normalize_feature:
             inputs = normalize(inputs, axis=-1)
         # import pdb
         # pdb.set_trace()
-        inputs = oim(inputs, targets, self.lut, momentum=self.momentum)
+
+        # inputs = oim(inputs, targets, self.lut, momentum=self.momentum)
+        # momentum = min(self.momentum*epoch/60, self.momentum)
+        momentum = self.momentum
+        # print(momentum)
+        inputs  = oim(inputs, targets, self.lut, momentum=momentum)
 
         ### add margin (11/1)
-        phi = inputs - margin
+        phi = inputs - self.margin
         one_hot = torch.zeros(inputs.size(), device='cuda')
         one_hot.scatter_(1, targets.view(-1,1).long(), 1)
         inputs = (one_hot*phi) + ((1-one_hot)*inputs)
@@ -222,8 +231,9 @@ class OIMLoss(nn.Module):
         # loss = F.cross_entropy(inputs, targets, weight=self.weight,
         #                        reduction=self.reduction)
         return loss, inputs
-'''
 
+
+'''
 class OIM(autograd.Function):
     def __init__(self, lut, queue, index, momentum=0.5):
         super(OIM, self).__init__()
@@ -254,14 +264,14 @@ class OIM(autograd.Function):
                 # used.append(y)
                 self.lut[y] = self.momentum * self.lut[y] + (1. - self.momentum) * x
                 self.lut[y] /= self.lut[y].norm()
-        return grad_inputs, None
+        return grad_inputs.float(), None
 
 
 def oim(inputs, targets, lut, queue, index, momentum=0.5):
     return OIM(lut, queue, index, momentum=momentum)(inputs, targets)
 
 class OIMLoss(nn.Module):
-    def __init__(self, feat_dim, num_classes, queue_size=2000, scalar=1.0, momentum=0.5,
+    def __init__(self, feat_dim, num_classes, queue_size=2, scalar=1.0, momentum=0.5,
                  label_smooth=False, epsilon=0.1, weight=None, reduction='mean', loss_weight=1.0):
         super(OIMLoss, self).__init__()
         self.feat_dim = feat_dim
@@ -288,7 +298,7 @@ class OIMLoss(nn.Module):
         self.lut = self.lut.cuda()
         self.queue = self.queue.cuda()
 
-    def forward(self, inputs, targets, normalize_feature=True, margin=0.0):
+    def forward(self, inputs, targets, normalize_feature=True, margin=0.0, epoch=80):
         if normalize_feature:
             inputs = normalize(inputs, axis=-1)
         # import pdb
@@ -314,10 +324,267 @@ class OIMLoss(nn.Module):
             # pdb.set_trace()
             # weight = torch.cat([torch.ones(self.num_classes), torch.zeros(self.queue_size)])
             # weight = torch.cat([torch.ones(4768), torch.zeros(self.num_classes+self.queue_size-4768)])
-            weight = torch.cat([torch.ones(9968), torch.zeros(self.num_classes+self.queue_size-9968)])
-            weight = weight.cuda()
+            # weight = torch.cat([torch.ones(9968), torch.zeros(self.num_classes+self.queue_size-9968)])
+            weight = torch.cat([torch.ones(6987), torch.zeros(self.num_classes+self.queue_size-6987)])
+            weight = weight.cuda() 
             loss = F.cross_entropy(inputs, targets, weight=weight, reduction=self.reduction, ignore_index=-1)
         #self.index = (self.index + torch.nonzero(targets<0) % self.queue_size
         self.index = (self.index + torch.nonzero(targets>=self.num_classes).size(0)) % self.queue_size
+        return loss, inputs
+'''
+
+'''
+#### 12.27 AE
+class OIM(autograd.Function):
+    def __init__(self, lut, momentum=0.5):
+        super(OIM, self).__init__()
+        self.lut = lut
+        self.momentum = momentum
+    
+    def forward(self, inputs, targets):
+        self.save_for_backward(inputs, targets)
+        outputs = inputs.mm(self.lut.t())
+        return outputs
+    
+    def backward(self, grad_outputs):
+        inputs, targets = self.saved_tensors
+        grad_inputs = None
+        if self.needs_input_grad[0]:
+            grad_inputs = grad_outputs.mm(self.lut)
+        for x, y in zip(inputs, targets):
+            self.lut[y] = self.momentum * self.lut[y] + (1. - self.momentum) * x
+            self.lut[y] /= self.lut[y].norm()
+        return grad_inputs, None
+        # return grad_inputs.float(), None
+
+def oim(inputs, targets, lut, momentum=0.5):
+    return OIM(lut, momentum=momentum)(inputs, targets)
+
+
+class OIMLoss(nn.Module):
+    def __init__(self, feat_dim, num_classes, num_classes_extra=0, scalar=1.0, momentum=0.5, 
+                delta = 3.5, xi = 0.2, lambda0=0.55, label_smooth=False, epsilon=0.1, weight=None, 
+                reduction='mean'):
+        super(OIMLoss, self).__init__()
+        num_classes = 6987
+        # num_classes_extra = 24905
+        num_classes_extra = 1511
+        print('num_class_extra:',num_classes_extra)
+        print('num_class:',num_classes)
+
+        self.feat_dim = feat_dim
+        self.num_classes = num_classes
+        self.momentum = momentum
+        self.scalar = scalar
+        self.weight = weight
+        self.reduction = reduction
+        self.label_smooth = label_smooth
+        if self.label_smooth:
+            self.epsilon = epsilon
+            self.logsoftmax = nn.LogSoftmax(dim=1)
+        
+        self.num_classes_extra = num_classes_extra
+        self.delta = delta
+        self.xi = xi
+        self.lambda0 = lambda0
+        if self.num_classes_extra>0:
+            self.register_buffer('em', torch.zeros(num_classes_extra, feat_dim))
+            self.em = self.em.cuda()
+
+        self.register_buffer('lut', torch.zeros(num_classes, feat_dim))
+        self.lut = self.lut.cuda()
+    
+    def adaptive_selection(self, inputs_extra, targets_extra):
+        ###minimize distances between all person images
+        targets_onehot = (inputs_extra > self.lambda0*self.scalar).float()
+        ks = (targets_onehot.sum(dim=1)).float()
+        ks1 = ks.cpu()
+        ks_mask = (ks > 1).float()
+        ks = ks * ks_mask + (1 - ks_mask) * 2
+        ks = self.delta / (ks * torch.log(ks))
+        ks = (ks * ks_mask).view(-1,1)
+        targets_onehot = targets_onehot * ks
+       
+        ###maximize distances between similar person images
+        targets_extra = torch.unsqueeze(targets_extra, 1)
+        targets_onehot.scatter_(1, targets_extra, float(1))
+        
+        return targets_onehot, ks1
+
+    def target_loss(self, inputs_extra, targets_extra):
+        targets_line, ks = self.adaptive_selection(inputs_extra.detach().clone(),targets_extra.detach().clone())
+        outputs = F.log_softmax(inputs_extra, dim=1)
+        loss = -(targets_line*outputs)
+        loss = loss.sum(dim=1)
+        loss = loss.mean(dim=0)
+        return loss, ks
+
+    def forward(self, inputs, targets, normalize_feature=True, margin=0.2, epoch=80): 
+        if normalize_feature:
+            inputs = normalize(inputs, axis=-1)
+
+        # inputs = oim(inputs, targets, self.lut, momentum=self.momentum)
+        # momentum = min(self.momentum*epoch/60, self.momentum)
+        momentum = self.momentum
+        # print(momentum)
+        # import pdb
+        # pdb.set_trace()
+
+        index_extra = torch.nonzero(targets>=self.num_classes).view(-1)
+        inputs_extra = inputs[index_extra,:]
+        targets_extra = targets[index_extra] - self.num_classes
+
+        index_train = torch.nonzero(targets<self.num_classes).view(-1)
+        inputs = inputs[index_train,:]
+        targets = targets[index_train]
+
+        #### input train:
+        inputs  = oim(inputs, targets, self.lut, momentum=momentum)
+
+        ### add margin (11/1)
+        phi = inputs - margin
+        one_hot = torch.zeros(inputs.size(), device='cuda')
+        one_hot.scatter_(1, targets.view(-1,1).long(), 1)
+        inputs = (one_hot*phi) + ((1-one_hot)*inputs)
+
+        inputs *= self.scalar
+        ### add label smooth (11/4)
+        if self.label_smooth:
+            log_probs = self.logsoftmax(inputs)
+            targets = torch.zeros(log_probs.size()).scatter_(1, targets.unsqueeze(1).data.cpu(), 1)
+            targets = targets.cuda()
+            targets = (1 - self.epsilon) * targets + self.epsilon / self.num_classes
+            loss = (- targets * log_probs).mean(0).sum()
+        else:
+            loss = F.cross_entropy(inputs, targets, weight=self.weight,
+                                    reduction=self.reduction)
+        
+        if len(targets_extra)==0:
+            return loss, inputs
+        #### input extra:
+        inputs_extra = oim(inputs_extra, targets_extra, self.em, momentum=momentum)
+        inputs_extra *= self.scalar
+        if epoch>4:
+            loss_extra, ks = self.target_loss(inputs_extra, targets_extra)
+        else:
+            loss_extra = F.cross_entropy(inputs_extra, targets_extra)
+            ks = torch.FloatTensor(128).zero_()
+        
+        loss = (1-self.xi)*loss + self.xi*loss_extra
+
+        return loss, inputs
+'''
+
+
+'''
+#### 12.28 ME
+class OIM(autograd.Function):
+    def __init__(self, lut, em, k, num_classes, momentum=0.5):
+        super(OIM, self).__init__()
+        self.lut = lut
+        self.momentum = momentum
+
+        self.em = em
+        self.k = k
+        self.num_classes = num_classes
+    
+    def forward(self, inputs, targets):
+        self.save_for_backward(inputs, targets)
+        outputs = inputs.mm(self.lut.t())
+
+        # import pdb
+        # pdb.set_trace()
+        temp = inputs.mm(self.em.t())
+        value,_ = torch.topk(temp, self.k, dim=1)
+        # outputs = torch.cat((outputs,value), dim=1)
+
+        return outputs, value
+    
+    def backward(self, grad_outputs, grad_value):
+        inputs, targets = self.saved_tensors
+        grad_inputs = None
+        if self.needs_input_grad[0]:
+            grad_inputs = grad_outputs.mm(self.lut)
+        for x, y in zip(inputs, targets):
+            if y<self.num_classes:
+                self.lut[y] = self.momentum * self.lut[y] + (1. - self.momentum) * x
+                self.lut[y] /= self.lut[y].norm()
+            else:
+                self.em[y-self.num_classes, :] = x.view(1,-1)
+        return grad_inputs, None
+        # return grad_inputs.float(), None
+
+def oim(inputs, targets, lut, em, k, num_classes, momentum=0.5):
+    return OIM(lut, em, k, num_classes, momentum=momentum)(inputs, targets)
+
+
+class OIMLoss(nn.Module):
+    def __init__(self, feat_dim, num_classes, num_classes_extra=0, scalar=1.0, momentum=0.5, 
+                k=15, lambda0=0.55, label_smooth=False, epsilon=0.1, weight=None, 
+                reduction='mean'):
+        super(OIMLoss, self).__init__()
+        num_classes = 6987
+        num_classes_extra = 24905
+        print('num_class_extra:',num_classes_extra)
+        print('num_class:',num_classes)
+
+        self.feat_dim = feat_dim
+        self.num_classes = num_classes
+        self.momentum = momentum
+        self.scalar = scalar
+        self.weight = weight
+        self.reduction = reduction
+        self.label_smooth = label_smooth
+        if self.label_smooth:
+            self.epsilon = epsilon
+            self.logsoftmax = nn.LogSoftmax(dim=1)
+        
+        self.num_classes_extra = num_classes_extra
+        self.k = k
+        self.lambda0 = lambda0
+        if self.num_classes_extra>0:
+            self.register_buffer('em', torch.zeros(num_classes_extra, feat_dim))
+            self.em = self.em.cuda()
+
+        self.register_buffer('lut', torch.zeros(num_classes, feat_dim))
+        self.lut = self.lut.cuda()
+
+    def forward(self, inputs, targets, normalize_feature=True, margin=0.2, epoch=80): 
+        if normalize_feature:
+            inputs = normalize(inputs, axis=-1)
+
+        # inputs = oim(inputs, targets, self.lut, momentum=self.momentum)
+        # momentum = min(self.momentum*epoch/60, self.momentum)
+        momentum = self.momentum
+        # print(momentum)
+        # import pdb
+        # pdb.set_trace()
+
+        #### input train:
+        inputs, value  = oim(inputs, targets, self.lut, self.em, self.k, self.num_classes, momentum=momentum)
+        inputs = torch.cat((inputs, value), dim=1)
+
+        index_train = torch.nonzero(targets<self.num_classes).view(-1)
+        inputs = inputs[index_train,:]
+        targets = targets[index_train]
+
+        ### add margin (11/1)
+        phi = inputs - margin
+        one_hot = torch.zeros(inputs.size(), device='cuda')
+        one_hot.scatter_(1, targets.view(-1,1).long(), 1)
+        inputs = (one_hot*phi) + ((1-one_hot)*inputs)
+
+        inputs *= self.scalar
+        ### add label smooth (11/4)
+        if self.label_smooth:
+            log_probs = self.logsoftmax(inputs)
+            targets = torch.zeros(log_probs.size()).scatter_(1, targets.unsqueeze(1).data.cpu(), 1)
+            targets = targets.cuda()
+            targets = (1 - self.epsilon) * targets + self.epsilon / self.num_classes
+            loss = (- targets * log_probs).mean(0).sum()
+        else:
+            loss = F.cross_entropy(inputs, targets, weight=self.weight,
+                                    reduction=self.reduction)
+        
         return loss, inputs
 '''

@@ -143,14 +143,18 @@ class Baseline(nn.Module):
                               last_stride=last_stride)
         elif model_name == 'resnet50_ibn_a':
             self.base = resnet50_ibn_a(last_stride)
+            self.in_planes = 2048
         elif model_name == 'resnext101_ibn_a':
             self.base = resnext101_ibn_a(4,32)
         elif model_name == 'densenet121_ibn_a':
             self.base = densenet121_ibn_a()
+            self.in_planes = 1024
         elif model_name == 'densenet169_ibn_a':
             self.base = densenet169_ibn_a()
+            self.in_planes = 1664
         elif model_name == 'se_resnet101_ibn_a':
             self.base = se_resnet101_ibn_a()
+            self.in_planes = 2048
         elif model_name == 'aognet':
             self.base = aognet_singlescale()
         elif model_name == 'resnet50_ibn_a_ha':
@@ -180,8 +184,8 @@ class Baseline(nn.Module):
             # self.classifier = nn.Linear(self.in_planes, self.num_classes, bias=False)     # new add by luo
             # self.classifier.apply(weights_init_classifier)  # new add by luo
         elif self.neck == 'bnneck':
-            self.bottleneck = nn.BatchNorm1d(self.in_planes)
-            # self.bottleneck = nn.BatchNorm1d(1664)  # densenet169
+            # self.bottleneck = nn.BatchNorm1d(256)
+            self.bottleneck = nn.BatchNorm1d(self.in_planes)  # densenet169
             self.bottleneck.bias.requires_grad_(False)  # no shift
             self.bottleneck.apply(weights_init_kaiming)
 
@@ -192,7 +196,8 @@ class Baseline(nn.Module):
             if not self.use_oim:
                 self.classifier = nn.Linear(self.in_planes, self.num_classes, bias=False)
                 self.classifier.apply(weights_init_classifier)
-        
+
+        # self.fc = nn.Linear(self.in_planes, 256)
         # self.dropout = nn.Dropout(p=0.1)
         ###  fix param
         # print('fix some params')
@@ -210,6 +215,8 @@ class Baseline(nn.Module):
         # global_feat = self.gap(global_feat)
         global_feat = global_feat.view(global_feat.shape[0], -1)  # flatten to (bs, 2048)
 
+        # global_feat = self.fc(global_feat)
+        # global_feat = self.dropout(global_feat)
         if self.neck == 'no':
             feat = global_feat
         elif self.neck == 'bnneck':

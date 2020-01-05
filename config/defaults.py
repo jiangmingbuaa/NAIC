@@ -77,7 +77,10 @@ _C.DATASETS = CN()
 # List of the dataset names for training, as present in paths_catalog.py
 _C.DATASETS.NAMES = ('market1501')
 # Root directory where datasets should be used (and downloaded if not found)
-_C.DATASETS.ROOT_DIR = ('/root/share/dataset/reid')
+# _C.DATASETS.ROOT_DIR = ('/root/share/dataset/reid')
+_C.DATASETS.ROOT_DIR = ('/tmp/data/')
+_C.DATASETS.QUERY_DIR = ('query_B')
+_C.DATASETS.GALLERY_DIR = ('gallery_B')
 
 # -----------------------------------------------------------------------------
 # DataLoader
@@ -118,6 +121,9 @@ _C.SOLVER.RANGE_MARGIN = 0.3
 _C.SOLVER.RANGE_ALPHA = 0
 _C.SOLVER.RANGE_BETA = 1
 _C.SOLVER.RANGE_LOSS_WEIGHT = 1
+
+# Settings of oim loss:
+_C.SOLVER.OIM_MARGIN = 0.1
 
 # Settings of weight decay
 _C.SOLVER.WEIGHT_DECAY = 0.0005
@@ -160,6 +166,8 @@ _C.TEST.WEIGHT = "/home1/lizihan/reID/model/naic"
 _C.TEST.NECK_FEAT = 'after'
 # Whether feature is nomalized before test, if yes, it is equivalent to cosine distance
 _C.TEST.FEAT_NORM = 'yes'
+
+_C.TEST.TEST_MODEL = ''
 
 # ---------------------------------------------------------------------------- #
 # Misc options
