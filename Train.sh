@@ -39,10 +39,10 @@ python3 cluster_b.py
 python3 tools/train.py --config_file='configs/softmax_triplet.yml' MODEL.DEVICE_ID "('0')" MODEL.NAME "('resnet50_ibn_a')" \
 MODEL.PRETRAIN_PATH "('/tmp/data/model/Experiment-resnet50_ibn_a_stage_2/resnet50_ibn_a_model_80.pth')" MODEL.PRETRAIN_CHOICE "('self')" \
 OUTPUT_DIR "('/tmp/data/model/Experiment-resnet50_ibn_a_stage_3')" SOLVER.IMS_PER_BATCH "(560)" \
-MODEL.METRIC_LOSS_TYPE "('triplet_oim')"  MODEL.IF_LABELSMOOTH "('off')" SOLVER.MAX_EPOCHS "(20)" SOLVER.BASE_LR "('0.000035')"
+MODEL.METRIC_LOSS_TYPE "('triplet_oim')"  MODEL.IF_LABELSMOOTH "('off')" SOLVER.MAX_EPOCHS "(20)" SOLVER.BASE_LR "(0.000035)"
 
 # triplet + oim, se_resnet101_ibn_a
 python3 tools/train.py --config_file='configs/softmax_triplet.yml' MODEL.DEVICE_ID "('0')" MODEL.NAME "('se_resnet101_ibn_a')" \
 MODEL.PRETRAIN_PATH "('/tmp/data/model/Experiment-se_resnet101_ibn_a_stage_1/se_resnet101_ibn_a_model_80.pth')" MODEL.PRETRAIN_CHOICE "('self')" \
 OUTPUT_DIR "('/tmp/data/model/Experiment-se_resnet101_ibn_a_stage_3')" SOLVER.IMS_PER_BATCH "(360)" \
-MODEL.METRIC_LOSS_TYPE "('triplet_oim')"  MODEL.IF_LABELSMOOTH "('off')"  SOLVER.MAX_EPOCHS "(20)" SOLVER.BASE_LR "('0.000035')"
+MODEL.METRIC_LOSS_TYPE "('triplet_oim')"  MODEL.IF_LABELSMOOTH "('off')"  SOLVER.MAX_EPOCHS "(20)" SOLVER.BASE_LR "(0.000035)"
