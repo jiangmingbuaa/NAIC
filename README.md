@@ -19,7 +19,7 @@ docker run train
 docker build -t test .
 docker run test
 
-*[^_^]:1. 切换到项目根目录。
+*[^_^]: #(1. 切换到项目根目录。)
 *[^_^]:2. 训练：运行```sh ./Train.sh```（可能需要修改该文件里的预训练权重路径）
 *[^_^]:3. 测试：运行```sh ./Test.sh```
 
