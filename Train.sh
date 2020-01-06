@@ -1,6 +1,6 @@
 # # oim, se_resnet101_ibn_a
 python3 tools/train.py --config_file='configs/softmax_triplet.yml' MODEL.DEVICE_ID "('0')" MODEL.NAME "('se_resnet101_ibn_a')" \
-MODEL.PRETRAIN_PATH "('/tmp/data/pretrain_model/se_resnet101_ibn_a.pth.tar')"  SOLVER.IMS_PER_BATCH "('360')" \
+MODEL.PRETRAIN_PATH "('/tmp/data/pretrain_model/se_resnet101_ibn_a.pth')"  SOLVER.IMS_PER_BATCH "('360')" \
 OUTPUT_DIR "('/tmp/data/model/Experiment-se_resnet101_ibn_a_stage_1')" \
 MODEL.METRIC_LOSS_TYPE "('oim')"  MODEL.IF_LABELSMOOTH "('off')"  SOLVER.OIM_MARGIN "('0.2')" 
 
@@ -11,7 +11,7 @@ TEST.WEIGHT "('/tmp/data/model/Experiment-se_resnet101_ibn_a_stage_1/se_resnet10
 
 # triplet + oim, resnet50_ibn_a
 # python3 tools/train.py --config_file='configs/softmax_triplet.yml' MODEL.DEVICE_ID "('0')" MODEL.NAME "('resnet50_ibn_a')" \
-# MODEL.PRETRAIN_PATH "('/tmp/data/pretrain_model/resnet50_ibn_a.pth.tar')"  SOLVER.IMS_PER_BATCH "('336')" \
+# MODEL.PRETRAIN_PATH "('/tmp/data/pretrain_model/resnet50_ibn_a.pth')"  SOLVER.IMS_PER_BATCH "('336')" \
 # OUTPUT_DIR "('/tmp/data/model/Experiment-resnet50_ibn_a_stage_1')" \
 # MODEL.METRIC_LOSS_TYPE "('oim')"  MODEL.IF_LABELSMOOTH "('off')"  SOLVER.OIM_MARGIN "('0.2')"
 
@@ -24,7 +24,7 @@ python3 cluster_a.py
 
 # triplet + oim, resnet50_ibn_a
 python3 tools/train.py --config_file='configs/softmax_triplet.yml' MODEL.DEVICE_ID "('0')" MODEL.NAME "('resnet50_ibn_a')" \
-MODEL.PRETRAIN_PATH "('/tmp/data/pretrain_model/resnet50_ibn_a.pth.tar')"  SOLVER.IMS_PER_BATCH "('560')" \
+MODEL.PRETRAIN_PATH "('/tmp/data/pretrain_model/resnet50_ibn_a.pth')"  SOLVER.IMS_PER_BATCH "('560')" \
 OUTPUT_DIR "('/tmp/data/model/Experiment-resnet50_ibn_a_stage_2')" \
 MODEL.METRIC_LOSS_TYPE "('triplet_oim')"  MODEL.IF_LABELSMOOTH "('off')"  SOLVER.OIM_MARGIN "('0.1')"
 

@@ -69,7 +69,11 @@ class NAIC(BaseImageDataset):
             label = []
             pid_container = set()
             for name_label in label_list:
-                img_paths.append(osp.join(self.dataset_dir,name_label.split(' ')[0]))  ### to do
+                # img_paths.append(osp.join(self.dataset_dir,name_label.split(' ')[0]))  ### to do: train/image/*.png
+                if 'train' in name_label:
+                    img_paths.append(osp.join(dir_path, 'image', name_label.split(' ')[0].split('/')[-1]))
+                else:
+                    img_paths.append(osp.join(self.dataset_dir,name_label.split(' ')[0]))
                 # if 'query' in name_label or 'gallery' in name_label:
                 #     img_paths.append(osp.join(self.dataset_dir,name_label.split(' ')[0]))
                 # else:

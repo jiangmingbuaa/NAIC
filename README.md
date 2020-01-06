@@ -11,8 +11,19 @@ NAIC复赛代码，在[Strong Baseline](https://github.com/michuanhaohao/reid-st
 
 ## 项目的运行步骤
 1. 切换到项目根目录。
-2. 训练：运行```sh ./Train.sh```（可能需要修改该文件里的预训练权重路径）
-3. 测试：运行```sh ./Test.sh```
+2. 训练：终端输入：
+docker build -t train .
+docker run train
+3. 测试：
+修改Dockerfile_test文件名为Dockerfile，在终端输入：
+docker build -t test .
+docker run test
+
+*[^_^]:1. 切换到项目根目录。
+*[^_^]:2. 训练：运行```sh ./Train.sh```（可能需要修改该文件里的预训练权重路径）
+*[^_^]:3. 测试：运行```sh ./Test.sh```
 
 ## 运行结果的位置
-1. 运行```sh ./Test.sh```后，最终结果保存在```/tmp/data/answer/NAIC_ensemble_submission_2b.json```文件中。
+1. 执行上述步骤后，最终结果保存在```/tmp/data/answer/NAIC_ensemble_submission_2b.json```文件中。
+
+*[^_^]:1. 运行```sh ./Test.sh```后，最终结果保存在```/tmp/data/answer/NAIC_ensemble_submission_2b.json```文件中。

@@ -12,6 +12,7 @@ q_pids = np.load('/tmp/data/model/g_pids.npy')
 # model_list_di = ['25_80', '34_80', '36_80', '37_80', '38_80']
 model_list = ['stage_1_se_resnet101_80', 'stage_1_se_resnet101_90', 'stage_2_resnet50_80', 'stage_2_resnet50_90', 'stage_3_se_resnet101_20', 'stage_3_resnet50_20']
 
+
 # print('Loading model qe:')
 # dist_list_qe = []
 # for name in model_list_qe:
