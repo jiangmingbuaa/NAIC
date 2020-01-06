@@ -10,7 +10,7 @@ NAIC复赛代码，在[Strong Baseline](https://github.com/michuanhaohao/reid-st
 训练预计时间41小时，测试预计时间7小时。项目在容器中的路径：```/tmp/data/code```
 
 ## 项目的运行步骤
-1. 切换到项目根目录。
+1. 下载代码：```git clone -b stage2 https://github.com/jiangmingbuaa/NAIC```，切换到项目根目录。
 
 2. 训练：
 
