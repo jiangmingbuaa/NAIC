@@ -15,7 +15,7 @@ class NAIC(BaseImageDataset):
 
     dataset_dir = 'NAIC'
 
-    def __init__(self, root='/root/share/dataset/reid/', verbose=True, gallery_dir='gallery_B', query_dir='query_B', **kwargs):
+    def __init__(self, root='/tmp/data/', verbose=True, gallery_dir='gallery_B', query_dir='query_B', **kwargs):
         super(NAIC, self).__init__()
         # self.dataset_dir = osp.join(root, self.dataset_dir)
         # self.dataset_dir = osp.join(root, 'NAIC2')
