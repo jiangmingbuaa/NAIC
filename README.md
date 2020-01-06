@@ -18,6 +18,7 @@ NAIC复赛代码，在[Strong Baseline](https://github.com/michuanhaohao/reid-st
 docker build -t train .
 
 docker run train
+
 3. 测试：
 
 修改Dockerfile_test文件名为Dockerfile，在终端输入：
