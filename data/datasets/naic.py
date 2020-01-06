@@ -15,22 +15,23 @@ class NAIC(BaseImageDataset):
 
     dataset_dir = 'NAIC'
 
-    def __init__(self, root='/tmp/data/', verbose=True, gallery_dir='gallery_B', query_dir='query_B', **kwargs):
+    def __init__(self, root='/root/share/dataset/reid', verbose=True, gallery_dir='gallery_B', query_dir='query_B', **kwargs):
         super(NAIC, self).__init__()
+        root = root='/root/share/dataset/reid'
         # self.dataset_dir = osp.join(root, self.dataset_dir)
-        # self.dataset_dir = osp.join(root, 'NAIC2')
-        self.dataset_dir = root # /tmp/data
+        self.dataset_dir = osp.join(root, 'NAIC2')
+        # self.dataset_dir = root # /tmp/data
         self.train_dir = osp.join(self.dataset_dir, 'train') # train dir
-        # self.query_dir = osp.join(self.dataset_dir, 'query_b') # query dir
-        # self.gallery_dir = osp.join(self.dataset_dir, 'gallery_b') # gallery dir
-        self.query_dir = osp.join(self.dataset_dir, 'test', query_dir)
-        self.gallery_dir = osp.join(self.dataset_dir, 'test', gallery_dir)
+        self.query_dir = osp.join(self.dataset_dir, 'query_b') # query dir
+        self.gallery_dir = osp.join(self.dataset_dir, 'gallery_b') # gallery dir
+        # self.query_dir = osp.join(self.dataset_dir, 'test', query_dir)
+        # self.gallery_dir = osp.join(self.dataset_dir, 'test', gallery_dir)
 
         self._check_before_run()
 
         # train = self._process_dir(self.train_dir, 'train_all_list.txt', relabel=True) # train file list
-        train = self._process_dir(self.train_dir, 'label/train_list.txt', relabel=True)
-        # query = self._process_dir(self.query_dir, 'query_b_list.txt', relabel=False) # query file list
+        train = self._process_dir(self.train_dir, 'train_list.txt', relabel=True)
+        # query = self._process_dir(self.query_dir, 'query_a_list.txt', relabel=False) # query file list
         query = self._process_dir(self.query_dir, '', relabel=False)
         gallery = self._process_dir(self.gallery_dir, '', relabel=False)
 
