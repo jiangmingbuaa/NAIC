@@ -28,5 +28,7 @@ NAIC复赛代码，在[Strong Baseline](https://github.com/michuanhaohao/reid-st
 
    docker run test
 
+训练过程中需要读取并修改```/tmp/data/train/label/train_list.txt```，模型和中间结果保存在```/tmp/data/model```中，最终结果保存在```/tmp/data/answer```中。
+
 ## 运行结果的位置
 1. 执行上述步骤后，最终结果保存在```/tmp/data/answer/NAIC_ensemble_submission_2b.json```文件中。
